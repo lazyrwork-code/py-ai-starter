@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Matcher</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: #f5f5f5; padding: 2rem; }
+        h1 { text-align: center; margin-bottom: 2rem; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+        label { font-weight: bold; display: block; margin-bottom: 0.5rem; color: #555; }
+        textarea { width: 100%; height: 150px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; resize: vertical; font-size: 14px; }
+        button { width: 100%; padding: 1rem; background: #4f46e5; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 1rem; }
+        button:hover { background: #4338ca; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        #result { white-space: pre-wrap; line-height: 1.7; color: #333; }
+        .loading { text-align: center; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Job Matcher</h1>
+        
+        <div class="card">
+            <label>CV Kamu</label>
+            <textarea id="cv" placeholder="Paste CV kamu di sini..."></textarea>
+        </div>
+
+        <div class="card">
+            <label>Deskripsi Lowongan</label>
+            <textarea id="job" placeholder="Paste deskripsi lowongan di sini..."></textarea>
+        </div>
+
+        <button id="btn" onclick="analyze()">🔍 Analisis Sekarang</button>
+
+        <div class="card" id="result-card" style="display:none; margin-top:1rem;">
+            <label>Hasil Analisis AI</label>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const cv = document.getElementById('cv').value;
+            const job = document.getElementById('job').value;
+            const btn = document.getElementById('btn');
+            const resultCard = document.getElementById('result-card');
+            const result = document.getElementById('result');
+
+            if (!cv || !job) {
+                alert('Isi CV dan deskripsi lowongan dulu ya!');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Menganalisis...';
+            resultCard.style.display = 'none';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cv, job_description: job })
+                });
+
+                const data = await response.json();
+                result.textContent = data.analysis;
+                resultCard.style.display = 'block';
+            } catch (err) {
+                alert('Error: Pastikan FastAPI server sudah jalan!');
+            }
+
+            btn.disabled = false;
+            btn.textContent = '🔍 Analisis Sekarang';
+        }
+    </script>
+</body>
+</html>
