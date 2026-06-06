@@ -1,16 +1,38 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI()
+app = FastAPI(title="Job Matcher API")
 
-class Message(BaseModel):
-    text: str
+class Developer(BaseModel):
+    name: str
+    skills: list[str]
+
+class Job(BaseModel):
+    title: str
+    required_skills: list[str]
+
+class MatchRequest(BaseModel):
+    developer: Developer
+    jobs: list[Job]
+
+def calculate_match(dev_skills, required_skills):
+    match = sum(1 for s in required_skills if s in dev_skills)
+    return round((match / len(required_skills)) * 100, 1)
 
 @app.get("/")
 def read_root():
-    return {"status": "FastAPI is running for AI project"}
+    return {"status": "Job Matcher API is running!"}
 
-@app.post("/predict")
-def predict(message: Message):
-    # Simulasi endpoint AI
-    return {"input": message.text, "output": f"AI response to: {message.text}"}
+@app.post("/match")
+def match_jobs(request: MatchRequest):
+    results = []
+    for job in request.jobs:
+        score = calculate_match(request.developer.skills, job.required_skills)
+        results.append({"title": job.title, "score": score})
+    
+    sorted_results = sorted(results, key=lambda x: x["score"], reverse=True)
+    
+    return {
+        "developer": request.developer.name,
+        "matches": sorted_results
+    }
